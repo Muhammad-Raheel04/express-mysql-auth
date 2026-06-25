@@ -3,6 +3,16 @@ import validator from 'validator';
 export const validateRegister = async (req, res, next) => {
     const { name, email, password } = req.body;
 
+    if (!name || !email || !password) {
+        // bad request
+        // missing required field
+        return res.status(400).json({
+            success: false,
+            message: "All field are required",
+        })
+    }
+
+
     if (!validator.isEmail(email)) {
         // bad request
         // invalid email format
