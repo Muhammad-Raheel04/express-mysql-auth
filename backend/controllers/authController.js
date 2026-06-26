@@ -1,5 +1,5 @@
 import validator from 'validator';
-import { connect } from '../config/db.js';
+import { db } from '../config/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -13,7 +13,7 @@ export const register = async (req, res) => {
                 message: "All field are required",
             })
         }
-        const [rows] = await connect.query(
+        const [rows] = await db.query(
             "SELECT id FROM users WHERE email = ?",
             [email]
         );
@@ -26,7 +26,7 @@ export const register = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const [result] = await connect.query(
+        const [result] = await db.query(
             "INSERT INTO users(name,email,password) VALUES (?,?,?)",
             [name, email, hashedPassword]
         )
