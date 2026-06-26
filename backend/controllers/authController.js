@@ -1,6 +1,7 @@
 import validator from 'validator';
 import { connect } from '../config/db.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export const register = async (req, res) => {
     try {
@@ -17,6 +18,7 @@ export const register = async (req, res) => {
             [email]
         );
         if (rows.length > 0) {
+            // Conflict
             return res.status(409).json({
                 success: false,
                 message: "User already exist",
@@ -24,14 +26,16 @@ export const register = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await connect.query(
+        const [newUser] = await connect.query(
             "INSERT INTO users(name,email,password) VALUES (?,?,?)",
             [name, email, hashedPassword]
         )
 
-        return res.status(200).json({
+        const token = await jwt.sign({ id: newUser.insertId }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        return res.status(201).json({
             success: true,
             message: "User registered successfully",
+            token
         })
 
     } catch (error) {
