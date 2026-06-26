@@ -2,6 +2,7 @@ import validator from 'validator';
 import { db } from '../config/db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { sendVerificationEmail } from '../services/mailService.js';
 
 export const register = async (req, res) => {
     try {
@@ -32,6 +33,9 @@ export const register = async (req, res) => {
         )
 
         const token = await jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+        await sendVerificationEmail(name, email, token);
+
         return res.status(201).json({
             success: true,
             message: "User registered successfully",
