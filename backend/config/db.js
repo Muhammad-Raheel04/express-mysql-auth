@@ -1,9 +1,9 @@
 const { DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME } = process.env;
 import mysql from 'mysql2/promise';
 
-let connect;
+let db;
 try {
-    connect = await mysql.createConnection({
+    db = await mysql.createConnection({
         host: DB_HOST,
         user: DB_USERNAME,
         password: DB_PASSWORD,
@@ -14,4 +14,4 @@ try {
 } catch (err) {
     console.error(`Database connection failed Error: ${err}`)
 }
-export { connect }
+export { db }
