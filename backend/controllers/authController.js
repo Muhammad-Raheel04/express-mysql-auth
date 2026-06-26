@@ -26,12 +26,12 @@ export const register = async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const [newUser] = await connect.query(
+        const [result] = await connect.query(
             "INSERT INTO users(name,email,password) VALUES (?,?,?)",
             [name, email, hashedPassword]
         )
 
-        const token = await jwt.sign({ id: newUser.insertId }, process.env.JWT_SECRET, { expiresIn: '10m' });
+        const token = await jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: '10m' });
         return res.status(201).json({
             success: true,
             message: "User registered successfully",
