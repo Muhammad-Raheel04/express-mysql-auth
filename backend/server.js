@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+
 const app = express();
 const PORT = process.env.PORT;
 
@@ -18,6 +20,7 @@ app.use((err, req, res, next) => {
     })
 })
 
+app.use('/api/v1/auth',authRoutes)
 app.listen(PORT, () => {
     console.log(`Visit http://localhost:${PORT}`)
 })
