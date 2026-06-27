@@ -49,3 +49,47 @@ export const register = async (req, res) => {
         })
     }
 }
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            // bad request
+            // missing fields
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            })
+        }
+        const [result] = await db.query(
+            "SELECT * FROM users WHERE email = ?",
+            [email]
+        )
+
+        if (result.length === 0) {
+            // not found
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+        const isMatch = await bcrypt.compare(password, result[0].password);
+
+        if (!isMatch) {
+            // unauthorized
+            return res.status(401).json({
+                success: false,
+                message: "Password incorrect"
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Login Successfull",
+            id: result[0].id
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        })
+    }
+}
