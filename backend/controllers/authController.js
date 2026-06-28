@@ -35,6 +35,11 @@ export const register = async (req, res) => {
         const token = await jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
         await sendVerificationEmail(name, email, token);
+        
+        await db.query(
+            "UPDATE users SET token = ? WHERE id = ?",
+            [token,result.insertId]
+        )
 
         return res.status(201).json({
             success: true,
@@ -46,6 +51,7 @@ export const register = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
+            error:error.message,
         })
     }
 }
