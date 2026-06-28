@@ -54,7 +54,8 @@ export const register = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "Registration successful. Please check your email to verify your account."
+            message: "Registration successful. Please check your email to verify your account.",
+            token,
         })
 
     } catch (error) {
@@ -106,6 +107,57 @@ export const login = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
+        })
+    }
+}
+
+export const verify = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer')) {
+            // Unauthorized
+            return res.status(401).json({
+                success: false,
+                message: "Authorization header is missing or invalid."
+            })
+        }
+        const token = authHeader.split(" ")[1];
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (err) {
+            // Unauthorized
+            return res.status(401).json({
+                success: false,
+                message: "Expired or used token",
+                err,
+            })
+        }
+        const [user] = await db.query(
+            "SELECT * FROM users WHERE id = ?",
+            [decoded.id]
+        )
+        if (user.length === 0) {
+            // Not Found
+            return res.status(404).json({
+                success: false,
+                message: "User Not Found"
+            })
+        }
+        await db.query(
+            "UPDATE users set isVerified = ?, token = ? WHERE id = ?",
+            [true, null, user[0].id]
+        )
+        return res.status(200).json({
+            success: true,
+            message: "Email Verified Successfully!",
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message,
         })
     }
 }
