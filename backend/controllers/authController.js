@@ -98,15 +98,24 @@ export const login = async (req, res) => {
                 message: "Password incorrect"
             })
         }
+        const accessToken = jwt.sign({ id: result[0].id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+        const refreshToken = jwt.sign({ id: result[0].id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+
+        await db.query(
+            "INSERT INTO sessions(user_id,refreshToken) VALUES(?,?)",
+            [result[0].id,refreshToken],
+        )
         return res.status(200).json({
             success: true,
             message: "Login Successfull",
-            id: result[0].id
+            id: result[0].id,
+            accessToken,
         })
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
+            error:error.message
         })
     }
 }
