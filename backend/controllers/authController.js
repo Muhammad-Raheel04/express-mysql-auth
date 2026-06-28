@@ -34,24 +34,34 @@ export const register = async (req, res) => {
 
         const token = await jwt.sign({ id: result.insertId }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-        await sendVerificationEmail(name, email, token);
-        
+        try {
+            await sendVerificationEmail(name, email, token);
+        } catch (err) {
+            await db.query(
+                "DELETE FROM users WHERE id = ?",
+                [result.insertId]
+            )
+            return res.status(500).json({
+                success: false,
+                message: "Failed to send verification email. Please try again.",
+            })
+        }
+
         await db.query(
             "UPDATE users SET token = ? WHERE id = ?",
-            [token,result.insertId]
+            [token, result.insertId]
         )
 
         return res.status(201).json({
             success: true,
-            message: "User registered successfully",
-            token
+            message: "Registration successful. Please check your email to verify your account."
         })
 
     } catch (error) {
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
-            error:error.message,
+            error: error.message,
         })
     }
 }
