@@ -103,7 +103,11 @@ export const login = async (req, res) => {
 
         await db.query(
             "INSERT INTO sessions(user_id,refreshToken) VALUES(?,?)",
-            [result[0].id,refreshToken],
+            [result[0].id, refreshToken],
+        )
+        await db.query(
+            "UPDATE users SET isLoggedIn = ? WHERE id = ? ",
+            [true,result[0].id]
         )
         return res.status(200).json({
             success: true,
@@ -115,7 +119,7 @@ export const login = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
-            error:error.message
+            error: error.message
         })
     }
 }
@@ -167,6 +171,30 @@ export const verify = async (req, res) => {
             success: false,
             message: "Internal Server Error",
             error: error.message,
+        })
+    }
+}
+
+export const logout = async (req, res) => {
+    try {
+        const id = req.user.id;
+        await db.query(
+            "DELETE FROM sessions WHERE id = ?",
+            [id]
+        )
+        await db.query(
+            "UPDATE users SET isLoggedIn = ? WHERE id = ?",
+            [id, false]
+        )
+        return res.status(200).json({
+            success: true,
+            message: "Logged Out Successfully",
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
         })
     }
 }
