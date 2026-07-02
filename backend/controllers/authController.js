@@ -107,13 +107,14 @@ export const login = async (req, res) => {
         )
         await db.query(
             "UPDATE users SET isLoggedIn = ? WHERE id = ? ",
-            [true,result[0].id]
+            [true, result[0].id]
         )
         return res.status(200).json({
             success: true,
             message: "Login Successfull",
             id: result[0].id,
             accessToken,
+            refreshToken,
         })
     } catch (error) {
         return res.status(500).json({
