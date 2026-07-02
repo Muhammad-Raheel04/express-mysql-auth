@@ -199,3 +199,48 @@ export const logout = async (req, res) => {
         })
     }
 }
+
+export const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            // Unauthorized
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token missing",
+            })
+        }
+        let decoded;
+        try {
+            decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        } catch (err) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid or expired refresh token"
+            })
+        }
+        const [session] = await db.query(
+            "SELECT * FROM sessions WHERE user_id = ?",
+            [decoded.id]
+        )
+        if (session.length === 0) {
+            // Unauthorized
+            return res.status(401).json({
+                success: false,
+                message: "Session not found. Plz Login Again",
+            })
+        }
+        const newAccessToken = jwt.sign({ id: decoded.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+        return res.status(200).json({
+            success: true,
+            accessToken: newAccessToken
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
+        })
+    }
+}
